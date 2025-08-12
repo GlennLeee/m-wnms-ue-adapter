@@ -1,0 +1,80 @@
+syntax = "proto3";
+package com.biskitlab.awnms.proto.model;
+option go_package = "../model";
+
+message ClientReport {
+	string apMac = 1;
+	string apIp = 2;
+	repeated ClientInfo clientList = 3;
+	int32 clientNum = 4;
+	int64 timestamp = 5;
+}
+
+message ClientInfo {
+    /**
+     * @property snapshot
+     * @aggregation NULL
+     * @description MAC address of the client
+     * @since 3.5
+     */
+	string mac = 1;
+    /**
+     * @property snapshot
+     * @aggregation NULL
+     * @description IP address of the client
+     * @since 3.5
+     */
+	string ipAddress = 2;
+
+	string radioMode = 3;
+	optional string ap80211RadioMode = 4;
+	string authMethod = 5;
+	optional string encryptMethod = 6;
+	string bssid = 7;
+	string ssid = 8;
+	optional string username = 9;
+	int32 vlan = 10;
+	optional string osType = 11;
+	string hostname = 12;
+	int32 channel = 13;
+	int32 channelWidth = 14;
+	int32 rssi = 15;
+	optional int32 maxRssi = 16;
+	optional int32 minRssi = 17;
+	optional int32 firstRssi = 18;
+	int32 noiseFloor = 19;
+	int32 snr = 20;
+	string location = 21;
+	string sessionId = 22;
+	optional uint64 ipAssignTime = 23;
+	uint64 sessionTime = 24;
+	uint64 radioId = 25;
+	optional uint64 wsgWlanId = 26;
+	optional string wlanGroupId = 27;
+	uint64 medianTxMCSRate = 28;
+	uint64 medianRxMCSRate = 29;
+	optional int32 deviceType = 30;
+	optional uint64 osVendorType = 31;
+	uint64 txPer = 32;
+	ClientTrafficInfo traffic = 33;
+
+	optional string cpIp = 51;
+	optional string dpIp = 52;
+}
+
+message ClientTrafficInfo {
+	int64 rxBytes = 1;
+	int64 txBytes = 2;
+	int64 rxPackets = 3;
+	int64 txPackets = 4;
+	int64 rxBps = 5;
+	int64 txBps = 6;
+	int64 rxPps = 7;
+	int64 txPps = 8;
+	int64 rxBytesDelta = 9;
+	int64 txBytesDelta = 10;
+	int64 rxPacketsDelta = 11;
+	int64 txPacketsDelta = 12;
+	int64 txDropDataFrameDelta = 13;
+	int64 rxCRCErrFramesDelta = 14;
+}

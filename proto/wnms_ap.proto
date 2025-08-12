@@ -1,0 +1,105 @@
+syntax = "proto3";
+package com.biskitlab.awnms.proto.model;
+option go_package = "../model";
+
+message ApReport {
+	repeated ApInfo apList = 3;
+	int32 ApNum = 4;
+	int64 timestamp = 5;
+}
+
+message ApInfo {
+	string mac = 1;
+	string ipAddress = 2;
+	string serialNumber = 3;
+	string name = 4;
+	string controllerIp = 5;
+	string dpIp = 6;
+	uint64 lastBootTs = 7;
+	string apState = 8;
+	int32 clientNum = 9;
+	string vendor = 10;
+	string model = 11;
+
+	HardwareInfo hw = 21;
+	ApTrafficInfo traffic = 22;
+	repeated RadioInfo radio = 23;
+}
+
+message RadioInfo {
+	bool enabled = 1;
+	int32 clientNum = 2;
+	int32 connFailCnt = 3;
+	optional float failureRate = 4;
+	int32 meshEnabled = 5;
+	bool isRadioEnabled = 6;
+
+	int32 channel = 11;
+	string band = 12;
+	uint32 channelWidth = 13;
+	string txPower = 14;
+	string radioMode = 15;
+	int32 noiseFloor = 16;
+	int32 latency = 17;
+	uint32 capacity = 18;
+
+
+	AirtimeInfo airtime = 21;
+	ApTrafficInfo traffic = 22;
+	repeated WlanInfo wlan = 23;
+
+	bool isCapacityFlagged = 31;
+	bool isLatencyFlagged = 32;
+	bool isAirtimeFlagged = 33;
+
+}
+
+message HardwareInfo {
+	float cpuPercent = 1;
+	float storagePercent = 2;
+	float memPercent = 3;
+	optional float temperature = 4;
+}
+
+message ApTrafficInfo {
+	// 부팅 이후 전체 총량
+	int64 rxBytes = 1;
+	int64 txBytes = 2;
+	int64 rxPackets = 3;
+	int64 txPackets = 4;
+
+	// 마지막 전송 시점부터 현재 전송 시점까지의 통계 정보
+	int64 rxBytesDelta = 11;
+	int64 txBytesDelta = 12;
+	int64 rxPacketsDelta = 13;
+	int64 txPacketsDelta = 14;
+
+	// 마지막 전송 시점부터 현재 전송 시점까지의 속도
+	int64 rxBps = 15;
+	int64 txBps = 16;
+	int64 rxPps = 17;
+	int64 txPps = 18;
+}
+
+message AirtimeInfo {
+	float utilRx = 1;
+	float utilTx = 2;
+	float utilBusy = 3;
+	float utilTotal = 4;
+}
+
+message WlanInfo {
+	string name = 1;
+	string ssid = 2;
+	int32 clientNum = 3;
+	bool enabled = 4;
+	string bssid = 5;
+	string radio80211Mode = 6;
+	string authMethod = 7;
+	string encMethod = 8;
+
+	int64 rxBytesDelta = 11;
+	int64 txBytesDelta = 12;
+	int64 rxPacketsDelta = 13;
+	int64 txPacketsDelta = 14;
+}

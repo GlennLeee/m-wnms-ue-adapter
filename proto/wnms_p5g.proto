@@ -1,0 +1,72 @@
+syntax = "proto3";
+package com.biskitlab.awnms.proto.model;
+option go_package = "../model";
+
+message P5gStatsReport {
+	repeated P5gStats p5gStats = 1;
+	uint64 timestamp = 2;
+}
+
+message P5gStats {
+	string id = 1;
+	map<string, string> data = 10;
+	
+	// int64 rrcTry = 10;
+	// int64 rrcSuccess = 11;
+	// float rrcRate = 12;
+
+	// int64 releaseTry = 13;
+	// int64 releaseSuccess = 14;
+	// float releaseRate = 15;
+
+	// int64 cbraTry = 16;
+	// int64 cbraSuccess = 17;
+	// float cbraRate = 18;
+
+	// int64 cfraTry = 19;
+	// int64 cfraSuccess = 20;
+	// float cfraRate = 21;
+
+	// int64 hoRuTry = 31;
+	// int64 hoRuSuccess = 32;
+	// float hoRuRate = 33;
+
+	// int64 hoDuTry = 34;
+	// int64 hoDuSuccess = 35;
+	// float hoDuRate = 36;
+
+	// int32 cqi64Qam = 41;
+	// int32 cqi256Qam = 42;
+
+	// float initDLBler = 43;
+	// float initULBler = 44;
+
+	// float residualDLBler = 45;
+	// float residualUlBler = 46;
+
+	// float DLPrbUsage = 47;
+	// float ULPrbUsage = 48;
+
+	// int64 mcsDLR164 = 51;
+	// int64 mcsDLR264 = 52;
+	// int64 mcsDLR364 = 53;
+	// int64 mcsDLR464 = 54;
+
+	// int64 mcsDLR1256 = 55;
+	// int64 mcsDLR2256 = 56;
+	// int64 mcsDLR3256 = 57;
+	// int64 mcsDLR4256 = 58;
+
+	// int64 mcsULAvg64 = 61;
+	// int64 mcsULAvg256 = 62;
+
+	// int64 thpDLCell = 63;
+	// int64 thpULCell = 64;
+
+	// int64 cuMacDULatency = 65;
+	// float dLOPdcpPktLoss = 66;
+
+	// float pucchSinr = 71;
+	// float puschSinrR1 = 72;
+	// float puschSinrR2 = 73;
+}

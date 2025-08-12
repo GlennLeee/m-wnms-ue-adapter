@@ -1,0 +1,41 @@
+syntax = "proto3";
+package com.biskitlab.awnms.proto.model;
+option go_package = "../model";
+
+
+option java_multiple_files = true;
+option java_package = "com.biskitlab.awnms.proto";
+option java_outer_classname = "WnmsCollectorServiceProto";
+
+import "wnms_message.proto";
+
+service WnmsDataCollector {
+  rpc UpdateAccessPointData (RpcRequest) returns (RpcReply) {
+
+  }
+  rpc UpdateClientData (RpcRequest) returns (RpcReply) {
+
+  }
+  rpc UpdateEventData (RpcRequest) returns (RpcReply) {
+
+  }
+  rpc UpdateAlarmData (RpcRequest) returns (RpcReply) {
+
+  }
+  rpc UpdateConfigData (RpcRequest) returns (RpcReply) {
+
+  }
+  rpc UpdatePlaneData (RpcRequest) returns (RpcReply) {
+    
+  }
+  rpc PingData (RpcRequest) returns (RpcReply) {
+
+  }
+  rpc UpdateP5gStatsData (RpcRequest) returns (RpcReply) {
+
+  }
+  rpc UpdateP5gUeStatsData (RpcRequest) returns (RpcReply) {
+
+  }
+}
+

@@ -1,0 +1,28 @@
+syntax = "proto3";
+package com.biskitlab.awnms.proto.model;
+option go_package = "../model";
+
+import "wnms_ap.proto";
+import "wnms_client.proto";
+import "wnms_event.proto";
+import "wnms_alarm.proto";
+import "wnms_plane.proto";
+import "wnms_p5g.proto";
+import "wnms_p5g_ue.proto";
+
+message RpcReply {
+  string message = 1;
+  int32 returnCode = 2;
+}
+
+message RpcRequest {
+  string message = 1;
+  int64 timestamp = 2;
+  ApReport apReport = 11;
+  ClientReport clientReport = 12;
+  EventReport eventReport = 21;
+  AlarmReport alarmReport = 22;
+  Plane planeReport = 31;
+  P5gStatsReport p5gStatsReport = 41;
+  P5gUeStatsReport p5gUeStatsReport = 42;
+}

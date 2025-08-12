@@ -1,0 +1,109 @@
+syntax = "proto3";
+package com.biskitlab.awnms.proto.model;
+option go_package = "../model";
+
+message P5gUeStatsReport {
+	repeated P5gUeStats p5gUeStats = 1;
+	uint64 timestamp = 2;
+}
+
+message P5gUeSystem {
+	float cpuRate = 1;
+	float memoryRate = 2;
+	float storageRate = 3;
+	float temperature = 4;
+	string firmwareVersion = 5;
+	string handle = 6;
+	int64 startEpoch = 7;
+	int64 uptimeSecs = 8;
+	string commway = 9;
+	int32 lan1Act = 10;
+	int32 lan2Act = 11;
+	int32 wlan0Act = 12;
+	int32 qmimux0Act = 13;
+}
+
+message P5gUeLan {
+	int64 bpsTxAvg = 1;
+	int64 bpsTxSum = 2;
+	int64 bpsRxAvg = 3;
+	int64 bpsRxSum = 4;
+}
+
+message P5gUeWlan {
+	string ipAddress = 1;
+	string macAddress = 2;
+	int64 bpsTxAvg = 3;
+	int64 bpsTxSum = 4;
+	int64 bpsRxAvg = 5;
+	int64 bpsRxSum = 6;
+	int32 rssi = 7;
+	int32 noiseLevel = 8;
+	int32 antA = 9;
+	int32 antB = 10;
+	int64 mcsTx = 11;
+	int64 mcsRx = 12;
+}
+
+message P5gUeQmimux {
+	string ipAddress = 1;
+	string imei = 2;
+	string imsi = 3;
+
+	string pcid = 11;
+	int32 tac = 12;
+	int32 rsrp = 13;
+	int32 rsrq = 14;
+	int32 rssi = 15;
+	int32 cqi = 16;
+	int32 ri = 17;
+	int32 rb = 18;
+
+	int64 mcsTx = 21;
+	int64 mcsRx = 22;
+
+	int64 bpsTxAvg = 23;
+	int64 bpsTxSum = 24;
+	int64 bpsRxAvg = 25;
+	int64 bpsRxSum = 26;
+
+	float ant0Power = 31;
+	float ant0Ecio = 32;
+	float ant0Rsrp = 33;
+
+	float ant1Power = 34;
+	float ant1Ecio = 35;
+	float ant1Rsrp = 36;
+
+	float ant2Power = 37;
+	float ant2Ecio = 38;
+	float ant2Rsrp = 39;
+
+	float ant3Power = 40;
+	float ant3Ecio = 41;
+	float ant3Rsrp = 42;
+}
+
+message P5gUeLoc {
+	float PosX = 1;
+	float PosY = 2;
+	float Angle = 3;
+	int32 Status = 4;
+}
+
+message P5gUeStats {
+	int64 timestamp = 1;
+	string deviceName = 2;
+	string modelName = 3;
+	string groupName = 4;
+
+	P5gUeSystem system = 11;
+	P5gUeLan lan1 = 21;
+	P5gUeLan lan2 = 22;
+	P5gUeWlan wlan0 = 31;
+	P5gUeQmimux qmimux0 = 41;
+
+	P5gUeLoc location = 51;
+
+	repeated string dtc = 61;
+}
