@@ -1,10 +1,10 @@
 syntax = "proto3";
-package com.biskitlab.awnms.proto.model;
+package kr.connectlabs.wnms.proto.model;
 option go_package = "../model";
 
 
 option java_multiple_files = true;
-option java_package = "com.biskitlab.awnms.proto";
+option java_package = "kr.connectlabs.wnms.proto";
 option java_outer_classname = "WnmsCollectorServiceProto";
 
 import "wnms_message.proto";
@@ -35,6 +35,9 @@ service WnmsDataCollector {
 
   }
   rpc UpdateP5gUeStatsData (RpcRequest) returns (RpcReply) {
+
+  }
+  rpc UpdateStatisticsData (RpcRequest) returns (RpcReply) {
 
   }
 }

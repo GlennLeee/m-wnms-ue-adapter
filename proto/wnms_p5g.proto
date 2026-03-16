@@ -1,5 +1,5 @@
 syntax = "proto3";
-package com.biskitlab.awnms.proto.model;
+package kr.connectlabs.wnms.proto.model;
 option go_package = "../model";
 
 message P5gStatsReport {
@@ -10,6 +10,9 @@ message P5gStatsReport {
 message P5gStats {
 	string id = 1;
 	map<string, string> data = 10;
+
+	string regionCode = 91;
+	string factoryCode = 92;
 	
 	// int64 rrcTry = 10;
 	// int64 rrcSuccess = 11;

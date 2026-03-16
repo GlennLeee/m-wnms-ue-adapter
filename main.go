@@ -1,14 +1,10 @@
 package main
 
 import (
-	"encoding/json"
-	"flag"
-	"io/ioutil"
 	"log"
 	"os"
 	"reflect"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/go-co-op/gocron"
@@ -40,57 +36,35 @@ func registerConfig(key string, valIntf interface{}) {
 }
 
 func main() {
-	runtime.GOMAXPROCS(4)
+	runtime.GOMAXPROCS(2)
 	log.SetOutput(os.Stdout)
 
 	model.GrpcServiceChannel = make(chan model.GrpcServiceMsg, 1000)
 	model.GrpcServiceBackupChannel = make(chan model.GrpcServiceMsg, 1000)
 
-	propertyFile := flag.String("c", "properties.ini", "Property File Path")
-	flag.Parse()
-
-	// 초기 설정 파일 등록
-	configMap := make(map[string]interface{})
-	*propertyFile = strings.ReplaceAll(*propertyFile, "~", "")
-	*propertyFile = strings.ReplaceAll(*propertyFile, "..", "")
-
-	file, err := ioutil.ReadFile(*propertyFile)
-
-	if err != nil {
-		log.Fatal("설정 파일이 없습니다.\n절대 경로에 설정 파일을 배치해주세요.")
+	// timezone check
+	_, tzFlag := os.LookupEnv("TZ")
+	if !tzFlag {
+		log.Fatalln("서버의 타임존을 설정해주세요")
 	}
 
-	err = json.Unmarshal([]byte(string(file)), &configMap)
-	registerConfig("", interface{}(configMap))
-
 	db := &database.RdbConf{}
-	db.Initialize(os.Getenv("databse.info.host"), os.Getenv("databse.info.username"), os.Getenv("databse.info.password"), os.Getenv("databse.info.database"))
+	db.Initialize(os.Getenv("MARIADB_HOST"), os.Getenv("MARIADB_USERNAME"), os.Getenv("MARIADB_PASSWORD"), os.Getenv("MARIADB_SCHEMA"))
+	pdb := &database.PositionRdbConf{}
+	pdb.Initialize(os.Getenv("POSITION_DB_HOST"), os.Getenv("POSITION_DB_USERNAME"), os.Getenv("POSITION_DB_PASSWORD"), os.Getenv("POSITION_DB_SCHEMA"), os.Getenv("POSITION_DB_PORT"))
 
 	// init
-	collector.InitCollector(db)
 	log.Println("GRPC INIT")
 	grpcServer := message.InitializeGrpcServer() // GRPC Connection (데이터 컬렉터 접속)
-
-	log.Println("SNMP TRAP INIT")
-	fmManager := collector.FmManager{}
-	go fmManager.FmListenTrapSet()
 
 	ueManager := collector.UeManager{}
 	go ueManager.UeDataListener(db)
 
-	pmManager := collector.PmManager{}
-
 	// go pmManager.Run()
 	log.Println("SCHEDULER INIT")
 	s := gocron.NewScheduler(time.UTC)
-	s.Every("3m").Do(pmManager.Run, db)
-	s.Every("10s").Do(grpcServer.SendPing)
+	s.Every("60s").Do(grpcServer.SendPing)
 
 	s.StartAsync()
-	// router := mux.NewRouter()
-
-	// router.HandleFunc("/snmp/test", fmManager.Replay).Methods("GET")
-	// http.ListenAndServe(":8088", router)
-
 	select {}
 }

@@ -1,7 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 
-# 로그 파일 경로
-LOG_FILE="/app/log/awnms-p5g-adapter.log"
+# 로그 디렉토리/파일
+LOG_DIR="/app/log"
+LOG_FILE="${LOG_DIR}/wnms-ue-adapter.log"
 
 # 애플리케이션 실행 및 로그 기록
-/app/app -c /app/conf.d/properties.ini >> "$LOG_FILE" 2>&1
+exec /app/wnms-ue-adapter 2>&1 | tee -a "$LOG_FILE"

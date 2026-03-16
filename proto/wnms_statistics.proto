@@ -1,0 +1,17 @@
+syntax = "proto3";
+package kr.connectlabs.wnms.proto.model;
+option go_package = "../model";
+
+message StatisticsReport {
+	Statistics statistics = 1;
+	uint64 timestamp = 2;
+}
+
+message Statistics {
+	int32 currentWiFiAlarmCnt = 11;
+	int32 currentWiFiEventCnt = 12;
+	map<string, string> alarmStatusMap = 13;
+
+	string regionCode = 91;
+	string factoryCode = 92;
+}

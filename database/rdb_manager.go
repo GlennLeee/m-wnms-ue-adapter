@@ -67,7 +67,8 @@ func NumericParamChecker(paramName string, defaultValue int, minValue int, maxVa
 			retVal = defaultValue
 			log.Printf("%s error, use default value (%v)\n", paramName, defaultValue)
 		} else {
-			if tempVal < minValue && tempVal > maxValue {
+			if tempVal < minValue || tempVal > maxValue {
+				retVal = defaultValue
 				log.Printf("%s error, use default value (%v)\n", paramName, defaultValue)
 			} else {
 				retVal = tempVal

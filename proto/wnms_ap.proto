@@ -1,5 +1,5 @@
 syntax = "proto3";
-package com.biskitlab.awnms.proto.model;
+package kr.connectlabs.wnms.proto.model;
 option go_package = "../model";
 
 message ApReport {
@@ -24,6 +24,9 @@ message ApInfo {
 	HardwareInfo hw = 21;
 	ApTrafficInfo traffic = 22;
 	repeated RadioInfo radio = 23;
+	
+	string regionCode = 91;
+	string factoryCode = 92;
 }
 
 message RadioInfo {

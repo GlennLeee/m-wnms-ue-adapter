@@ -24,9 +24,9 @@ type GrpcService struct {
 }
 
 var kacp = keepalive.ClientParameters{
-	Time:                1 * time.Second,
-	Timeout:             time.Second,
-	PermitWithoutStream: true,
+	Time:                2 * time.Minute,
+	Timeout:             10 * time.Second,
+	PermitWithoutStream: false,
 }
 
 var grpcMap = map[string]string{
@@ -38,7 +38,7 @@ var grpcMap = map[string]string{
 }
 
 func InitializeGrpcServer() *GrpcService {
-	collectorHost := os.Getenv("collector.grpc.host")
+	collectorHost := os.Getenv("DATA_COLLECTOR_HOST")
 
 	log.Println("Try to connect Gprc Server [", collectorHost, "] ...")
 

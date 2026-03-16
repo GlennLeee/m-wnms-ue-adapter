@@ -1,5 +1,5 @@
 syntax = "proto3";
-package com.biskitlab.awnms.proto.model;
+package kr.connectlabs.wnms.proto.model;
 option go_package = "../model";
 
 message ClientReport {
@@ -60,6 +60,12 @@ message ClientInfo {
 
 	optional string cpIp = 51;
 	optional string dpIp = 52;
+
+	optional string mldAddress = 71;
+
+
+	string regionCode = 91;
+	string factoryCode = 92;
 }
 
 message ClientTrafficInfo {

@@ -35,8 +35,8 @@ type PointData struct {
 // 리스너 초기화
 func (u *UeManager) UeDataListener(db *database.RdbConf) {
 	log.Println("RUN P-5G UE Data Listener")
-	log.Println(os.Getenv("wnms_timezone"))
-	loc, errTz := time.LoadLocation(os.Getenv("wnms_timezone"))
+	log.Println(os.Getenv("TZ"))
+	loc, errTz := time.LoadLocation(os.Getenv("TZ"))
 	if errTz != nil {
 		panic(errTz)
 	}
@@ -53,8 +53,8 @@ func (u *UeManager) UeDataListener(db *database.RdbConf) {
 	}()
 
 	// 3초 delay 하지말고 추후, 변수에 임시 저장 후 넘어오면 임시로 보유한 것만 추가로 저장하는 것으로 하자.
-	opts := MQTT.NewClientOptions().AddBroker("tcp://" + os.Getenv("mqtt.url"))
-	serverNumber := os.Getenv("server.number")
+	opts := MQTT.NewClientOptions().AddBroker("tcp://" + os.Getenv("MQTT_HOST"))
+	serverNumber := os.Getenv("SERVER_NUMBER")
 
 	opts.OnConnect = func(c MQTT.Client) {
 		// 에러나면 재시작을 자동으로 하게 해야함.
@@ -92,55 +92,56 @@ func (u *UeManager) UeDataListener(db *database.RdbConf) {
 
 // 등록할 핸들러임
 func (u *UeManager) mqttHandler(client MQTT.Client, msg MQTT.Message) {
+	// Downstream gRPC queues are bounded; handle messages in-place so queue pressure
+	// throttles MQTT processing instead of spawning unbounded goroutines.
+	um := model.UeMessage{}
+	if err := json.Unmarshal(msg.Payload(), &um); err != nil {
+		log.Printf("invalid UE payload: %v\n", err)
+		return
+	}
 
-	go func(msg MQTT.Message) {
-		um := model.UeMessage{}
-		json.Unmarshal(msg.Payload(), &um)
+	um.Data.Lan1.BpsRxAvg, um.Data.Lan1.BpsRxSum = splitBps(um.Data.Lan1.BpsRx)
+	um.Data.Lan1.BpsTxAvg, um.Data.Lan1.BpsTxSum = splitBps(um.Data.Lan1.BpsTx)
+	um.Data.Lan2.BpsRxAvg, um.Data.Lan2.BpsRxSum = splitBps(um.Data.Lan2.BpsRx)
+	um.Data.Lan2.BpsTxAvg, um.Data.Lan2.BpsTxSum = splitBps(um.Data.Lan2.BpsTx)
 
-		um.Data.Lan1.BpsRxAvg, um.Data.Lan1.BpsRxSum = splitBps(um.Data.Lan1.BpsRx)
-		um.Data.Lan1.BpsTxAvg, um.Data.Lan1.BpsTxSum = splitBps(um.Data.Lan1.BpsTx)
-		um.Data.Lan2.BpsRxAvg, um.Data.Lan2.BpsRxSum = splitBps(um.Data.Lan2.BpsRx)
-		um.Data.Lan2.BpsTxAvg, um.Data.Lan2.BpsTxSum = splitBps(um.Data.Lan2.BpsTx)
+	um.Data.Wlan0.BpsRxAvg, um.Data.Wlan0.BpsRxSum = splitBps(um.Data.Wlan0.BpsRx)
+	um.Data.Wlan0.BpsTxAvg, um.Data.Wlan0.BpsTxSum = splitBps(um.Data.Wlan0.BpsTx)
 
-		um.Data.Wlan0.BpsRxAvg, um.Data.Wlan0.BpsRxSum = splitBps(um.Data.Wlan0.BpsRx)
-		um.Data.Wlan0.BpsTxAvg, um.Data.Wlan0.BpsTxSum = splitBps(um.Data.Wlan0.BpsTx)
+	um.Data.Qmimux0.BpsRxAvg, um.Data.Qmimux0.BpsRxSum = splitBps(um.Data.Qmimux0.BpsRx)
+	um.Data.Qmimux0.BpsTxAvg, um.Data.Qmimux0.BpsTxSum = splitBps(um.Data.Qmimux0.BpsTx)
 
-		um.Data.Qmimux0.BpsRxAvg, um.Data.Qmimux0.BpsRxSum = splitBps(um.Data.Qmimux0.BpsRx)
-		um.Data.Qmimux0.BpsTxAvg, um.Data.Qmimux0.BpsTxSum = splitBps(um.Data.Qmimux0.BpsTx)
+	um.Data.System.RuntimeSecs, _ = model.ParseTimeToSeconds(um.Data.System.Runtime)
 
-		um.Data.System.RuntimeSecs, _ = model.ParseTimeToSeconds(um.Data.System.Runtime)
+	cpuRate, err := strconv.ParseFloat(um.Data.System.CpuStr, 32)
+	if err != nil {
+		log.Println(err)
+	}
+	um.Data.System.Cpu = float32(cpuRate)
 
-		cpuRate, err := strconv.ParseFloat(um.Data.System.CpuStr, 32)
-		if err != nil {
-			log.Println(err)
+	uptimeTm, err := time.ParseInLocation("2006-01-02 15:04:05", um.Data.System.StartTime, u.loc)
+	if err != nil {
+		log.Println(err)
+	}
+	um.Data.System.StartTimeEpoch = uptimeTm.Unix()
+
+	tm, err := time.ParseInLocation("[2006-01-02, 15:04:05.999]", um.Data.Date, u.loc)
+	if err != nil {
+		log.Println(err)
+	}
+	um.Data.Timestamp = tm.UnixMilli()
+
+	imei := um.Data.Qmimux0.Imei
+	mac := um.Data.Wlan0.Mac
+
+	// IMEI가 정상적일때만 처리한다.
+	if imei == "" || imei == "0" || len(imei) == 15 {
+		sendRpcData(&um)
+		if imei == "" || imei == "0" {
+			imei = u.findImeiValue(mac)
 		}
-		um.Data.System.Cpu = float32(cpuRate)
-
-		uptimeTm, err := time.ParseInLocation("2006-01-02 15:04:05", um.Data.System.StartTime, u.loc)
-		if err != nil {
-			log.Println(err)
-		}
-		um.Data.System.StartTimeEpoch = uptimeTm.Unix()
-
-		tm, err := time.ParseInLocation("[2006-01-02, 15:04:05.999]", um.Data.Date, u.loc)
-		if err != nil {
-			log.Println(err)
-		}
-		um.Data.Timestamp = tm.UnixMilli()
-
-		imei := um.Data.Qmimux0.Imei
-		mac := um.Data.Wlan0.Mac
-
-		// IMEI가 정상적일때만 처리한다.
-		if imei == "" || imei == "0" || len(imei) == 15 {
-			sendRpcData(&um)
-			if imei == "" || imei == "0" {
-				imei = u.findImeiValue(mac)
-			}
-			u.sendDevicePosition(imei, mac, um.Data.Pos)
-		}
-
-	}(msg)
+		u.sendDevicePosition(imei, mac, um.Data.Pos)
+	}
 }
 
 func (u *UeManager) findImeiValue(wifiMac string) string {
@@ -321,17 +322,19 @@ func sendRpcData(data *model.UeMessage) {
 	}
 
 	p5gUeStats := model.P5GUeStats{
-		Timestamp:  data.Data.Timestamp,
-		DeviceName: data.Data.DeviceName,
-		ModelName:  data.Data.ModelName,
-		GroupName:  data.Data.GroupName,
-		System:     system,
-		Lan1:       lan1,
-		Lan2:       lan2,
-		Wlan0:      wlan,
-		Qmimux0:    qmimux,
-		Location:   location,
-		Dtc:        data.Data.Dtc,
+		Timestamp:   data.Data.Timestamp,
+		DeviceName:  data.Data.DeviceName,
+		ModelName:   data.Data.ModelName,
+		GroupName:   data.Data.GroupName,
+		System:      system,
+		Lan1:        lan1,
+		Lan2:        lan2,
+		Wlan0:       wlan,
+		Qmimux0:     qmimux,
+		Location:    location,
+		Dtc:         data.Data.Dtc,
+		RegionCode:  os.Getenv("DATA_REGION"),
+		FactoryCode: os.Getenv("DATA_FACTORY"),
 	}
 
 	p5gUeStatsReport := model.P5GUeStatsReport{

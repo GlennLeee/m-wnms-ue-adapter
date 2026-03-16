@@ -1,5 +1,5 @@
 syntax = "proto3";
-package com.biskitlab.awnms.proto.model;
+package kr.connectlabs.wnms.proto.model;
 option go_package = "../model";
 
 message AlarmReport {
@@ -36,7 +36,7 @@ message AlarmReport {
 	 * @description Alarm Code defined by AlarmEnum
 	 * @since 3.5.1
 	 */
-	uint32 alarmCode = 3;
+	string alarmCode = 3;
 	/**
 	 * @property snapshot
 	 * @aggregation NULL
@@ -186,4 +186,7 @@ message AlarmReport {
 	optional string bladeId = 24;
 	string vendor = 41;
 	string networkType = 42;
+	
+	string regionCode = 91;
+	string factoryCode = 92;
 }

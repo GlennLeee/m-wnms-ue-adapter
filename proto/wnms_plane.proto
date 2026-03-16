@@ -1,5 +1,5 @@
 syntax = "proto3";
-package com.biskitlab.awnms.proto.model;
+package kr.connectlabs.wnms.proto.model;
 option go_package = "../model";
 
 message Plane {
@@ -20,4 +20,7 @@ message Plane {
 	string version = 15;
 	optional string apVersion = 16;
 	optional string hostname = 17;
+
+	string regionCode = 91;
+	string factoryCode = 92;
 }

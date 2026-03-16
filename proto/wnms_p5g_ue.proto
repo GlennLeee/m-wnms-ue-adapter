@@ -1,5 +1,5 @@
 syntax = "proto3";
-package com.biskitlab.awnms.proto.model;
+package kr.connectlabs.wnms.proto.model;
 option go_package = "../model";
 
 message P5gUeStatsReport {
@@ -106,4 +106,7 @@ message P5gUeStats {
 	P5gUeLoc location = 51;
 
 	repeated string dtc = 61;
+
+	string regionCode = 91;
+	string factoryCode = 92;
 }

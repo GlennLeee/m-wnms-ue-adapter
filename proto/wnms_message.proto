@@ -1,5 +1,5 @@
 syntax = "proto3";
-package com.biskitlab.awnms.proto.model;
+package kr.connectlabs.wnms.proto.model;
 option go_package = "../model";
 
 import "wnms_ap.proto";
@@ -9,6 +9,7 @@ import "wnms_alarm.proto";
 import "wnms_plane.proto";
 import "wnms_p5g.proto";
 import "wnms_p5g_ue.proto";
+import "wnms_statistics.proto";
 
 message RpcReply {
   string message = 1;
@@ -25,4 +26,5 @@ message RpcRequest {
   Plane planeReport = 31;
   P5gStatsReport p5gStatsReport = 41;
   P5gUeStatsReport p5gUeStatsReport = 42;
+  StatisticsReport statisticsReport = 51;
 }

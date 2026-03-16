@@ -1,5 +1,5 @@
 syntax = "proto3";
-package com.biskitlab.awnms.proto.model;
+package kr.connectlabs.wnms.proto.model;
 option go_package = "../model";
 
 message EventReport {
@@ -23,7 +23,7 @@ message EventMessage {
 	 * @description Event code
 	 * @since 3.5
 	 */
-	uint32 eventCode = 2;
+	string eventCode = 2;
 	/**
 	 * @property snapshot
 	 * @aggregation NULL
@@ -154,4 +154,7 @@ message EventMessage {
 
 	string vendor = 41;
 	string networkType = 42;
+
+	string regionCode = 91;
+	string factoryCode = 92;
 }
