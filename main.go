@@ -48,8 +48,11 @@ func main() {
 		log.Fatalln("서버의 타임존을 설정해주세요")
 	}
 
+	// rdb를 통한 기본 정보 확보 및 각종 정보 업데이트
 	db := &database.RdbConf{}
 	db.Initialize(os.Getenv("MARIADB_HOST"), os.Getenv("MARIADB_USERNAME"), os.Getenv("MARIADB_PASSWORD"), os.Getenv("MARIADB_SCHEMA"))
+
+	// magnet agv 위치 정보 데이터베이스 접속
 	pdb := &database.PositionRdbConf{}
 	pdb.Initialize(os.Getenv("POSITION_DB_HOST"), os.Getenv("POSITION_DB_USERNAME"), os.Getenv("POSITION_DB_PASSWORD"), os.Getenv("POSITION_DB_SCHEMA"), os.Getenv("POSITION_DB_PORT"))
 
@@ -60,7 +63,10 @@ func main() {
 	ueManager := collector.UeManager{}
 	go ueManager.UeDataListener(db)
 
-	// go pmManager.Run()
+	posCollector := collector.PosCollector{}
+	posCollector.Initialize(pdb, db)
+	posCollector.Run()
+
 	log.Println("SCHEDULER INIT")
 	s := gocron.NewScheduler(time.UTC)
 	s.Every("60s").Do(grpcServer.SendPing)

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"maps"
+	"os"
 	"sync"
 	"time"
 
@@ -48,15 +49,18 @@ type MagnetAgvDevicePositionInfo struct {
 	H         int    `json:"h"`
 }
 
-func (p *PosCollector) Initialize(positionDb *database.PositionRdbConf, mappingDb *database.RdbConf, regionCode string, factoryCode string) {
+func (p *PosCollector) Initialize(positionDb *database.PositionRdbConf, mappingDb *database.RdbConf) {
 	p.positionDb = positionDb.C
 	p.mappingDb = mappingDb.C
 	p.deviceMap = make(map[string]MagnetAgvDeviceMapInfo)
-	p.regionCode = regionCode
-	p.factoryCode = factoryCode
+	p.regionCode = os.Getenv("DATA_REGION")
+	p.factoryCode = os.Getenv("DATA_FACTORY")
 	p.deviceMapMutex = &sync.RWMutex{}
 	p.devicePositionMap = make(map[string]MagnetAgvDevicePositionInfo)
 	p.devicePositionMapMutex = &sync.RWMutex{}
+}
+
+func (p *PosCollector) Run() {
 	s := gocron.NewScheduler(time.UTC)
 	s.Every("60s").Do(p.inquireDeviceMapList)
 	s.Every("60s").Do(p.inquireDevicePositionList)
@@ -64,6 +68,7 @@ func (p *PosCollector) Initialize(positionDb *database.PositionRdbConf, mappingD
 }
 
 // 얘는 60초마다 주기적으로 업데이트 해야하며, mutex 처리가 되어야 함
+// 맵핑 테이블을 읽어오는 것임.
 func (p *PosCollector) inquireDeviceMapList() error {
 	query := "SELECT id, agv_id, wifi_ip, p5g_ip, p5g_imsi, location, name, description, timestamp, region_code, factory_code FROM p5g_magnet_agv_info WHERE region_code = ? AND factory_code = ?"
 	rows, err := p.mappingDb.Query(query, p.regionCode, p.factoryCode)
@@ -113,11 +118,13 @@ func (p *PosCollector) inquireDevicePositionList() error {
 			return err
 		}
 		if deviceMapInfo, ok := deviceMapSnapshot[device.Robot]; ok {
+			// p5g imsi + wifi ip를 키로 사용하여 위치 정보를 저장하는 것임.Aa  AAA
 			positionUpdates[deviceMapInfo.P5gImsi+"_"+deviceMapInfo.WifiIp] = device
 		}
 	}
 
 	p.devicePositionMapMutex.Lock()
+	// 일단 위치를 업데이트한다.
 	maps.Copy(p.devicePositionMap, positionUpdates)
 	p.devicePositionMapMutex.Unlock()
 	return nil
