@@ -18,9 +18,14 @@ import (
 )
 
 type UeManager struct {
-	loc        *time.Location
-	mqttClient MQTT.Client
-	C          *sql.DB
+	loc          *time.Location
+	mqttClient   MQTT.Client
+	C            *sql.DB
+	posCollector *PosCollector
+}
+
+func (u *UeManager) SetPosCollector(p *PosCollector) {
+	u.posCollector = p
 }
 
 type PointData struct {
@@ -130,6 +135,17 @@ func (u *UeManager) mqttHandler(client MQTT.Client, msg MQTT.Message) {
 		imei := um.Data.Qmimux0.Imei
 		mac := um.Data.Wlan0.Mac
 
+		if u.posCollector != nil {
+			key := um.Data.Qmimux0.Imsi + "_" + um.Data.Wlan0.Ip
+			if devicePos, ok := u.posCollector.GetDevicePosition(key); ok {
+				um.Data.Pos.PosX = strconv.Itoa(devicePos.X)
+				um.Data.Pos.PosY = strconv.Itoa(devicePos.Y)
+				um.Data.Pos.Angle = strconv.Itoa(devicePos.H)
+				um.Data.Pos.Status = strconv.Itoa(devicePos.Mode)
+				um.Data.GroupName = fmt.Sprintf("%s_MAGNET", um.Data.GroupName)
+			}
+		}
+
 		// IMEI가 정상적일때만 처리한다.
 		if imei == "" || imei == "0" || len(imei) == 15 {
 			sendRpcData(&um)
@@ -143,7 +159,7 @@ func (u *UeManager) mqttHandler(client MQTT.Client, msg MQTT.Message) {
 }
 
 func (u *UeManager) findImeiValue(wifiMac string) string {
-	query := "SELECT imei FROM awnms.p5g_ue_info WHERE wifi_mac = ?"
+	query := "SELECT imei FROM p5g_ue_info WHERE wifi_mac = ?"
 	qRes, err := u.C.Query(query, wifiMac)
 	if err != nil {
 		log.Println("Find P5G IMEI error", err)

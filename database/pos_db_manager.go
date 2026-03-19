@@ -4,9 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/microsoft/go-mssqldb"
 )
 
 type PositionRdbConf struct {
@@ -19,15 +18,15 @@ type PositionRdbConf struct {
 	retryCnt int
 }
 
-func (p *PositionRdbConf) connection() {
-	defer func() {
-		if err := recover(); err != nil {
-			time.Sleep(1000 * time.Millisecond)
-			p.retryCnt++
-			log.Println("[Connection Error] ", p.retryCnt, " Retry")
-			p.connection()
-		}
-	}()
+func (p *PositionRdbConf) connection() error {
+	// defer func() {
+	// 	if err := recover(); err != nil {
+	// 		time.Sleep(1000 * time.Millisecond)
+	// 		p.retryCnt++
+	// 		log.Println("[Connection Error] ", p.retryCnt, " Retry")
+	// 		p.connection()
+	// 	}
+	// }()
 
 	p.retryCnt = 0
 	dataSource := fmt.Sprintf(
@@ -41,25 +40,32 @@ func (p *PositionRdbConf) connection() {
 	conn, err := sql.Open("sqlserver", dataSource)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println("RDB Connection Open Error:", err)
+		return err
 	}
 
 	// connection check
 	if err = conn.Ping(); err != nil {
 		conn.Close()
-		panic("RDB Connection Error")
+		log.Println("RDB Connection Ping Error:", err)
+		return err
 	}
 
 	log.Println("DB Opened [", p.url, "]")
 	p.C = conn
+	return nil
 }
 
-func (p *PositionRdbConf) Initialize(url string, username string, password string, schema string, port string) {
+func (p *PositionRdbConf) Initialize(url string, username string, password string, schema string, port string) error {
 	p.username = username
 	p.password = password
 	p.schema = schema
 	p.url = url
 	p.port = port
 
-	p.connection()
+	if p.url == "" {
+		return fmt.Errorf("position db host is empty")
+	}
+
+	return p.connection()
 }

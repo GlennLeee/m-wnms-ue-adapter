@@ -54,18 +54,23 @@ func main() {
 
 	// magnet agv 위치 정보 데이터베이스 접속
 	pdb := &database.PositionRdbConf{}
-	pdb.Initialize(os.Getenv("POSITION_DB_HOST"), os.Getenv("POSITION_DB_USERNAME"), os.Getenv("POSITION_DB_PASSWORD"), os.Getenv("POSITION_DB_SCHEMA"), os.Getenv("POSITION_DB_PORT"))
+	err := pdb.Initialize(os.Getenv("POSITION_DB_HOST"), os.Getenv("POSITION_DB_USERNAME"), os.Getenv("POSITION_DB_PASSWORD"), os.Getenv("POSITION_DB_SCHEMA"), os.Getenv("POSITION_DB_PORT"))
+	if err != nil {
+		log.Println("Position DB Connection Failed (Optional):", err)
+	}
 
 	// init
 	log.Println("GRPC INIT")
 	grpcServer := message.InitializeGrpcServer() // GRPC Connection (데이터 컬렉터 접속)
 
 	ueManager := collector.UeManager{}
-	go ueManager.UeDataListener(db)
 
 	posCollector := collector.PosCollector{}
 	posCollector.Initialize(pdb, db)
 	posCollector.Run()
+
+	ueManager.SetPosCollector(&posCollector)
+	go ueManager.UeDataListener(db)
 
 	log.Println("SCHEDULER INIT")
 	s := gocron.NewScheduler(time.UTC)

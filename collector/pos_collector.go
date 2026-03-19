@@ -5,6 +5,7 @@ import (
 	"log"
 	"maps"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -37,6 +38,13 @@ type PosCollector struct {
 	devicePositionMapMutex *sync.RWMutex
 }
 
+func (p *PosCollector) GetDevicePosition(key string) (MagnetAgvDevicePositionInfo, bool) {
+	p.devicePositionMapMutex.RLock()
+	defer p.devicePositionMapMutex.RUnlock()
+	val, ok := p.devicePositionMap[key]
+	return val, ok
+}
+
 type MagnetAgvDevicePositionInfo struct {
 	RobotId   int    `json:"robot_id"`
 	Robot     string `json:"robot"`
@@ -50,7 +58,9 @@ type MagnetAgvDevicePositionInfo struct {
 }
 
 func (p *PosCollector) Initialize(positionDb *database.PositionRdbConf, mappingDb *database.RdbConf) {
-	p.positionDb = positionDb.C
+	if positionDb != nil {
+		p.positionDb = positionDb.C
+	}
 	p.mappingDb = mappingDb.C
 	p.deviceMap = make(map[string]MagnetAgvDeviceMapInfo)
 	p.regionCode = os.Getenv("DATA_REGION")
@@ -62,7 +72,6 @@ func (p *PosCollector) Initialize(positionDb *database.PositionRdbConf, mappingD
 
 func (p *PosCollector) Run() {
 	s := gocron.NewScheduler(time.UTC)
-	s.Every("60s").Do(p.inquireDeviceMapList)
 	s.Every("60s").Do(p.inquireDevicePositionList)
 	s.StartAsync()
 }
@@ -96,6 +105,16 @@ func (p *PosCollector) inquireDeviceMapList() error {
 
 // MSSQL로 이루어진 positiondb에서 전체 장치의 위치 정보를 조회하는 함수
 func (p *PosCollector) inquireDevicePositionList() error {
+	err := p.inquireDeviceMapList()
+	if err != nil {
+		log.Println("Error fetching device map:", err)
+		return err
+	}
+
+	if p.positionDb == nil {
+		return nil
+	}
+
 	query := "SELECT RobotId, Robot, LogDT, ACSMode, Mode, Connected, X, Y, H FROM vw_RobotStatus"
 	rows, err := p.positionDb.Query(query)
 	if err != nil {
@@ -112,11 +131,23 @@ func (p *PosCollector) inquireDevicePositionList() error {
 	positionUpdates := make(map[string]MagnetAgvDevicePositionInfo)
 	for rows.Next() {
 		var device MagnetAgvDevicePositionInfo
-		err := rows.Scan(&device.RobotId, &device.Robot, &device.LogDT, &device.ACSMode, &device.Mode, &device.Connected, &device.X, &device.Y, &device.H)
+		var robotId, logDT, acsMode, mode, x, y, h sql.NullInt64
+		var robot sql.NullString
+		var connected sql.NullBool
+		err := rows.Scan(&robotId, &robot, &logDT, &acsMode, &mode, &connected, &x, &y, &h)
 		if err != nil {
 			log.Println("Error scanning device position:", err)
 			return err
 		}
+		device.RobotId = int(robotId.Int64)
+		device.Robot = strings.TrimSpace(robot.String)
+		device.LogDT = logDT.Int64
+		device.ACSMode = int(acsMode.Int64)
+		device.Mode = int(mode.Int64)
+		device.Connected = connected.Bool
+		device.X = int(x.Int64)
+		device.Y = int(y.Int64)
+		device.H = int(h.Int64)
 		if deviceMapInfo, ok := deviceMapSnapshot[device.Robot]; ok {
 			// p5g imsi + wifi ip를 키로 사용하여 위치 정보를 저장하는 것임.Aa  AAA
 			positionUpdates[deviceMapInfo.P5gImsi+"_"+deviceMapInfo.WifiIp] = device
