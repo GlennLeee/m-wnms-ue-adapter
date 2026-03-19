@@ -23,7 +23,6 @@ type MagnetAgvDeviceMapInfo struct {
 	Location    string    `json:"location"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	Timestamp   int64     `json:"timestamp"`
 	RegionCode  string    `json:"region_code"`
 	FactoryCode string    `json:"factory_code"`
 }
@@ -79,7 +78,7 @@ func (p *PosCollector) Run() {
 // 얘는 60초마다 주기적으로 업데이트 해야하며, mutex 처리가 되어야 함
 // 맵핑 테이블을 읽어오는 것임.
 func (p *PosCollector) inquireDeviceMapList() error {
-	query := "SELECT id, agv_id, wifi_ip, p5g_ip, p5g_imsi, location, name, description, timestamp, region_code, factory_code FROM p5g_magnet_agv_info WHERE region_code = ? AND factory_code = ?"
+	query := "SELECT id, agv_id, wifi_ip, p5g_ip, p5g_imsi, location, name, description, region_code, factory_code FROM p5g_magnet_agv_info WHERE region_code = ? AND factory_code = ?"
 	rows, err := p.mappingDb.Query(query, p.regionCode, p.factoryCode)
 	if err != nil {
 		log.Println("Error fetching device map:", err)
@@ -90,7 +89,7 @@ func (p *PosCollector) inquireDeviceMapList() error {
 	newDeviceMap := make(map[string]MagnetAgvDeviceMapInfo)
 	for rows.Next() {
 		var device MagnetAgvDeviceMapInfo
-		err := rows.Scan(&device.Id, &device.AgvId, &device.WifiIp, &device.P5gIp, &device.P5gImsi, &device.Location, &device.Name, &device.Description, &device.Timestamp, &device.RegionCode, &device.FactoryCode)
+		err := rows.Scan(&device.Id, &device.AgvId, &device.WifiIp, &device.P5gIp, &device.P5gImsi, &device.Location, &device.Name, &device.Description, &device.RegionCode, &device.FactoryCode)
 		if err != nil {
 			log.Println("Error scanning device map:", err)
 			return err
