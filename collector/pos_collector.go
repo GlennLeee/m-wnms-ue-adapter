@@ -89,10 +89,23 @@ func (p *PosCollector) inquireDeviceMapList() error {
 	newDeviceMap := make(map[string]MagnetAgvDeviceMapInfo)
 	for rows.Next() {
 		var device MagnetAgvDeviceMapInfo
-		err := rows.Scan(&device.Id, &device.AgvId, &device.WifiIp, &device.P5gIp, &device.P5gImsi, &device.Location, &device.Name, &device.Description, &device.RegionCode, &device.FactoryCode)
+		var agvId, wifiIp, p5gIp, p5gImsi, location, name, description, regionCode, factoryCode sql.NullString
+		err := rows.Scan(&device.Id, &agvId, &wifiIp, &p5gIp, &p5gImsi, &location, &name, &description, &regionCode, &factoryCode)
 		if err != nil {
 			log.Println("Error scanning device map:", err)
 			return err
+		}
+		device.AgvId = agvId.String
+		device.WifiIp = wifiIp.String
+		device.P5gIp = p5gIp.String
+		device.P5gImsi = p5gImsi.String
+		device.Location = location.String
+		device.Name = name.String
+		device.Description = description.String
+		device.RegionCode = regionCode.String
+		device.FactoryCode = factoryCode.String
+		if device.AgvId == "" {
+			continue
 		}
 		newDeviceMap[device.AgvId] = device
 	}
