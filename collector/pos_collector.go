@@ -115,7 +115,7 @@ func (p *PosCollector) inquireDeviceMapList() error {
 	return nil
 }
 
-// MSSQL로 이루어진 positiondb에서 전체 장치의 위치 정보를 조회하는 함수
+// MSSQL의 VIF_RobotState view에서 전체 장치의 위치 정보를 조회하는 함수
 func (p *PosCollector) inquireDevicePositionList() error {
 	err := p.inquireDeviceMapList()
 	if err != nil {
@@ -127,7 +127,7 @@ func (p *PosCollector) inquireDevicePositionList() error {
 		return nil
 	}
 
-	query := "SELECT RobotId, Robot, LogDT, ACSMode, Mode, Connected, X, Y, H FROM vw_RobotStatus"
+	query := "SELECT RobotId, Robot, LogDT, ACSMode, Mode, Connected, X, Y, H FROM VIF_RobotState"
 	rows, err := p.positionDb.Query(query)
 	if err != nil {
 		log.Println("Error fetching device position list:", err)
